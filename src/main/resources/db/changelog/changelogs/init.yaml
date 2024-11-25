@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: init
+      author: inventory
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: software
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: software_pk
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+            tableName: software
