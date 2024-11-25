@@ -6,20 +6,21 @@ databaseChangeLog:
         - onFail: MARK_RAN
           not:
             tableExists:
-              tableName: software
+              tableName: inventory
       changes:
         - createTable:
             columns:
               - column:
                   autoIncrement: true
                   constraints:
+                    nullable: false
                     primaryKey: true
-                    primaryKeyName: software_pk
+                    primaryKeyName: inventory_pkey
                   name: id
                   type: BIGINT
               - column:
                   constraints:
                     nullable: false
                   name: name
-                  type: VARCHAR(255)
-            tableName: software
+                  type: varchar(255)
+            tableName: inventory
