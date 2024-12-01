@@ -21,14 +21,14 @@ public class InventoryService {
     @Value("${ldap.host.password:}")
     String password;
 
+    ResolveService<ComputerEntry> resolveService = new ResolveService<>(ComputerEntry.class);
+
     private final LdapService ldapService;
     private final WmiService wmiService;
-    private final ResolveService resolveService;
 
-    public InventoryService(LdapService ldapService, WmiService wmiService, ResolveService resolveService) {
+    public InventoryService(LdapService ldapService, WmiService wmiService) {
         this.ldapService = ldapService;
         this.wmiService = wmiService;
-        this.resolveService = resolveService;
     }
 
     /*
