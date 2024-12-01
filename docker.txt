@@ -1,0 +1,12 @@
+
+// Build production package
+mvn clean package -Pproduction
+
+// Create image
+docker build . -t sysadminanywhere/inventory
+
+// Push to Docker Hub
+docker image push sysadminanywhere/inventory
+
+// Start
+docker run -p 8081:8080 sysadminanywhere/inventory
