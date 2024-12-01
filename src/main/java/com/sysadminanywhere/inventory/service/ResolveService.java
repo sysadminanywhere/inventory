@@ -1,8 +1,9 @@
 package com.sysadminanywhere.inventory.service;
 
-import com.sysadminanywhere.model.AD;
-import com.sysadminanywhere.model.ADSID;
+import com.sysadminanywhere.inventory.model.AD;
+import com.sysadminanywhere.inventory.model.ADSID;
 import lombok.SneakyThrows;
+import org.apache.directory.api.ldap.model.entry.*;
 import org.apache.directory.api.ldap.model.message.ModifyRequest;
 import org.apache.directory.api.ldap.model.message.ModifyRequestImpl;
 import org.springframework.data.domain.Page;

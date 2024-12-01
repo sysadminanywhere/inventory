@@ -2,15 +2,24 @@ package com.sysadminanywhere.inventory.service;
 
 import com.sysadminanywhere.inventory.model.ComputerEntry;
 import com.sysadminanywhere.inventory.model.SoftwareEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.directory.api.ldap.model.entry.Entry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class InventoryService {
+
+    @Value("${ldap.host.username:}")
+    String userName;
+
+    @Value("${ldap.host.password:}")
+    String password;
 
     private final LdapService ldapService;
     private final WmiService wmiService;
@@ -41,7 +50,14 @@ public class InventoryService {
     @Scheduled(cron = "${cron.expression}")
     public void scan() {
 
-        List<ComputerEntry> computers = getComputers("");
+        Boolean result = ldapService.login(userName, password);
+
+        if (!result) {
+            log.error("Unknown user: {}", userName);
+            return;
+        }
+
+        List<ComputerEntry> computers = getComputers();
 
         for (ComputerEntry computerEntry : computers) {
             List<SoftwareEntity> software = getSoftware(computerEntry.getCn());
@@ -58,8 +74,8 @@ public class InventoryService {
         }
     }
 
-    public List<ComputerEntry> getComputers(String filters) {
-        List<Entry> result = ldapService.search("(&(objectClass=computer)" + filters + ")");
+    public List<ComputerEntry> getComputers() {
+        List<Entry> result = ldapService.search("(objectClass=computer)");
         return resolveService.getADList(result);
     }
 
