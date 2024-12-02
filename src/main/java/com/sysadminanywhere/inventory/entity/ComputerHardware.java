@@ -2,8 +2,6 @@ package com.sysadminanywhere.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -24,12 +22,10 @@ public class ComputerHardware {
     @JoinColumn(name = "hardware_id", nullable = false)
     private Hardware hardware;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime checkingDate;
+
+    @Column(nullable = false)
+    private String status;
 
 }

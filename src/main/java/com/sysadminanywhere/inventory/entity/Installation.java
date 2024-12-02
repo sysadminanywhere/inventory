@@ -2,8 +2,6 @@ package com.sysadminanywhere.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -25,14 +23,9 @@ public class Installation {
     private Software software;
 
     @Column(nullable = false)
-    private LocalDateTime installationDate;
+    private LocalDateTime checkingDate;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private String status;
 
 }

@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 public class LdapService {
 
     private final LdapConnection connection;
-    private final LdapConnectionConfig ldapConnectionConfig;
 
     private String domainName;
     private String defaultNamingContext;
@@ -45,9 +44,8 @@ public class LdapService {
 
 
     @SneakyThrows
-    public LdapService(LdapConnection connection, LdapConnectionConfig ldapConnectionConfig) {
+    public LdapService(LdapConnection connection) {
         this.connection = connection;
-        this.ldapConnectionConfig = ldapConnectionConfig;
 
         Entry entry = connection.getRootDse();
         baseDn = new Dn(entry.get("rootdomainnamingcontext").get().getString());
@@ -199,6 +197,7 @@ public class LdapService {
 
         try {
             connection.bind(bindRequest);
+            return true;
         } catch (LdapException e) {
             log.error("Connection error: {}", e);
         }

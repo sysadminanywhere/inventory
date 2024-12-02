@@ -1,13 +1,21 @@
 package com.sysadminanywhere.inventory.service;
 
+import com.sysadminanywhere.inventory.entity.Computer;
+import com.sysadminanywhere.inventory.entity.Installation;
+import com.sysadminanywhere.inventory.entity.Software;
 import com.sysadminanywhere.inventory.model.ComputerEntry;
 import com.sysadminanywhere.inventory.model.SoftwareEntity;
+import com.sysadminanywhere.inventory.model.Status;
+import com.sysadminanywhere.inventory.repository.ComputerRepository;
+import com.sysadminanywhere.inventory.repository.InstallationRepository;
+import com.sysadminanywhere.inventory.repository.SoftwareRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,9 +34,16 @@ public class InventoryService {
     private final LdapService ldapService;
     private final WmiService wmiService;
 
-    public InventoryService(LdapService ldapService, WmiService wmiService) {
+    private final ComputerRepository computerRepository;
+    private final SoftwareRepository softwareRepository;
+    private final InstallationRepository installationRepository;
+
+    public InventoryService(LdapService ldapService, WmiService wmiService, ComputerRepository computerRepository, SoftwareRepository softwareRepository, InstallationRepository installationRepository) {
         this.ldapService = ldapService;
         this.wmiService = wmiService;
+        this.computerRepository = computerRepository;
+        this.softwareRepository = softwareRepository;
+        this.installationRepository = installationRepository;
     }
 
     /*
@@ -50,6 +65,8 @@ public class InventoryService {
     @Scheduled(cron = "${cron.expression}")
     public void scan() {
 
+        log.info("Scan started");
+
         Boolean result = ldapService.login(userName, password);
 
         if (!result) {
@@ -57,24 +74,80 @@ public class InventoryService {
             return;
         }
 
+        wmiService.init(userName, password);
+
         List<ComputerEntry> computers = getComputers();
 
+        log.info("Found {} computers", computers.size());
+
         for (ComputerEntry computerEntry : computers) {
-            List<SoftwareEntity> software = getSoftware(computerEntry.getCn());
+            if (!computerEntry.isDisabled()) {
+                Computer computer = checkComputer(computerEntry);
+                List<SoftwareEntity> software = getSoftware(computerEntry.getCn());
+                log.info("On computer {} found {} applications", computer.getName(), software.size());
+                for (SoftwareEntity softwareEntity : software) {
+                    checkSoftware(computer, softwareEntity);
+                }
+            }
         }
+
+        log.info("Scan stopped");
 
     }
 
-    public List<SoftwareEntity> getSoftware(String hostName) {
+    private void checkSoftware(Computer computer, SoftwareEntity softwareEntity) {
+        Software software = checkSoftware(softwareEntity);
+
+        List<Installation> installs = installationRepository.findAllByComputerAndSoftware(computer, software);
+
+        if(installs.isEmpty()) {
+            Installation installation = new Installation();
+            installation.setComputer(computer);
+            installation.setSoftware(software);
+            installation.setStatus(Status.ADDED.name());
+            installation.setCheckingDate(LocalDateTime.now());
+
+            installationRepository.save(installation);
+        }
+    }
+
+    private Computer checkComputer(ComputerEntry computerEntry) {
+        List<Computer> computers = computerRepository.findAllByName(computerEntry.getCn());
+        if (computers.isEmpty()) {
+            Computer computer = new Computer();
+            computer.setName(computerEntry.getCn());
+            computer.setDns(computerEntry.getDnsHostName());
+            return computerRepository.save(computer);
+        } else {
+            return computers.get(0);
+        }
+    }
+
+    private Software checkSoftware(SoftwareEntity softwareEntity) {
+        List<Software> software = softwareRepository.findByNameAndVendorAndVersion(softwareEntity.getName(), softwareEntity.getVendor(), softwareEntity.getVersion());
+        if (software.isEmpty()) {
+            Software soft = new Software();
+            soft.setName(softwareEntity.getName());
+            soft.setVersion(softwareEntity.getVersion());
+            soft.setVendor(softwareEntity.getVendor());
+
+            return softwareRepository.save(soft);
+        } else {
+            return software.get(0);
+        }
+    }
+
+    private List<SoftwareEntity> getSoftware(String hostName) {
         try {
             WmiResolveService<SoftwareEntity> wmiResolveService = new WmiResolveService<>(SoftwareEntity.class);
             return wmiResolveService.GetValues(wmiService.execute(hostName, "Select * From Win32_Product"));
         } catch (Exception ex) {
+            log.error("Error: {}", ex.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<ComputerEntry> getComputers() {
+    private List<ComputerEntry> getComputers() {
         List<Entry> result = ldapService.search("(objectClass=computer)");
         return resolveService.getADList(result);
     }
