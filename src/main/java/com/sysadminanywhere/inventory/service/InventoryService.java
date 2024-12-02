@@ -14,10 +14,14 @@ import org.apache.directory.api.ldap.model.entry.Entry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -62,6 +66,7 @@ public class InventoryService {
 
     */
 
+    @Transactional
     @Scheduled(cron = "${cron.expression}")
     public void scan() {
 
@@ -82,12 +87,14 @@ public class InventoryService {
 
         for (ComputerEntry computerEntry : computers) {
             if (!computerEntry.isDisabled()) {
-                Computer computer = checkComputer(computerEntry);
+                Computer computer = this.checkComputer(computerEntry);
                 List<SoftwareEntity> software = getSoftware(computerEntry.getCn());
                 log.info("On computer {} found {} applications", computer.getName(), software.size());
                 for (SoftwareEntity softwareEntity : software) {
-                    checkSoftware(computer, softwareEntity);
+                    this.checkSoftware(computer, softwareEntity);
                 }
+
+                this.checkForDeletedSoftware(computer, software);
             }
         }
 
@@ -95,10 +102,11 @@ public class InventoryService {
 
     }
 
-    private void checkSoftware(Computer computer, SoftwareEntity softwareEntity) {
-        Software software = checkSoftware(softwareEntity);
+    @Transactional
+    public void checkSoftware(Computer computer, SoftwareEntity softwareEntity) {
+        Software software = this.checkSoftware(softwareEntity);
 
-        List<Installation> installs = installationRepository.findAllByComputerAndSoftware(computer, software);
+        List<Installation> installs = installationRepository.findAllByComputerAndSoftwareAndStatus(computer, software, Status.ADDED.name());
 
         if(installs.isEmpty()) {
             Installation installation = new Installation();
@@ -111,7 +119,32 @@ public class InventoryService {
         }
     }
 
-    private Computer checkComputer(ComputerEntry computerEntry) {
+    @Transactional
+    public void checkForDeletedSoftware(Computer computer, List<SoftwareEntity> software) {
+        List<Installation> installs = installationRepository.findAllByComputerAndStatus(computer, Status.ADDED.name());
+
+        for (Installation installation : installs) {
+            List<SoftwareEntity> list = software.stream().filter(c ->
+                    c.getName().equalsIgnoreCase(installation.getSoftware().getName())
+                            && c.getVendor().equalsIgnoreCase(installation.getSoftware().getVendor())
+                            && c.getVersion().equalsIgnoreCase(installation.getSoftware().getVersion())
+            ).toList();
+
+            if (list.isEmpty()) {
+                log.info("Software {} not found on computer {}", installation.getSoftware(), computer.getName());
+
+                List<Installation> deleted = installationRepository.findAllByComputerAndSoftwareAndStatus(computer, installation.getSoftware(), Status.DELETED.name());
+                if(deleted.isEmpty()) {
+                    installation.setCheckingDate(LocalDateTime.now());
+                    installation.setStatus(Status.DELETED.name());
+                    installationRepository.save(installation);
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public Computer checkComputer(ComputerEntry computerEntry) {
         List<Computer> computers = computerRepository.findAllByName(computerEntry.getCn());
         if (computers.isEmpty()) {
             Computer computer = new Computer();
@@ -123,7 +156,8 @@ public class InventoryService {
         }
     }
 
-    private Software checkSoftware(SoftwareEntity softwareEntity) {
+    @Transactional
+    public Software checkSoftware(SoftwareEntity softwareEntity) {
         List<Software> software = softwareRepository.findByNameAndVendorAndVersion(softwareEntity.getName(), softwareEntity.getVendor(), softwareEntity.getVersion());
         if (software.isEmpty()) {
             Software soft = new Software();
