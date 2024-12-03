@@ -56,4 +56,9 @@ public class InventoryController {
         return ResponseEntity.ok(softwareRepository.getSoftwareInstallationCount());
     }
 
+    @GetMapping("/software/{softwareId}")
+    public ResponseEntity<List<ComputerDto>> getComputersWithSoftware(@PathVariable Long softwareId) {
+        return ResponseEntity.ok(computerRepository.getComputersWithSoftware(softwareId));
+    }
+
 }

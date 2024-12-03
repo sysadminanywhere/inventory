@@ -10,6 +10,7 @@ import java.util.List;
 public interface InstallationRepository  extends JpaRepository<Installation, Long>  {
 
     List<Installation> findAllByComputerAndSoftware(Computer computer, Software software);
+
     List<Installation> findAllByComputer(Computer computer);
 
 }
