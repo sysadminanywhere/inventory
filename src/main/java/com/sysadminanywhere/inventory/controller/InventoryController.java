@@ -3,12 +3,14 @@ package com.sysadminanywhere.inventory.controller;
 import com.sysadminanywhere.inventory.controller.dto.ComputerDto;
 import com.sysadminanywhere.inventory.controller.dto.SoftwareCount;
 import com.sysadminanywhere.inventory.controller.dto.SoftwareDto;
+import com.sysadminanywhere.inventory.controller.dto.SoftwareOnComputer;
 import com.sysadminanywhere.inventory.mapper.ComputerMapper;
 import com.sysadminanywhere.inventory.mapper.SoftwareMapper;
 import com.sysadminanywhere.inventory.repository.ComputerRepository;
 import com.sysadminanywhere.inventory.repository.SoftwareRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,6 +39,11 @@ public class InventoryController {
     @GetMapping("/computers")
     public ResponseEntity<List<ComputerDto>> getComputers() {
         return ResponseEntity.ok(computerMapper.toDtoList(computerRepository.findAll()));
+    }
+
+    @GetMapping("/computers/{computerId}")
+    public ResponseEntity<List<SoftwareOnComputer>> getSoftwareOnComputer(@PathVariable Long computerId) {
+        return ResponseEntity.ok(softwareRepository.getSoftwareOnComputer(computerId));
     }
 
     @GetMapping("/software")
