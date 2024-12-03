@@ -1,6 +1,6 @@
 
 // Build production package
-mvn clean package -Pproduction
+mvn clean package -DskipTests -Pproduction
 
 // Create image
 docker build . -t sysadminanywhere/inventory
