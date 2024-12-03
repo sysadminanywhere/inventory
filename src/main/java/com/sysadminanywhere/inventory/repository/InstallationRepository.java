@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface InstallationRepository  extends JpaRepository<Installation, Long>  {
 
-    List<Installation> findAllByComputerAndSoftwareAndStatus(Computer computer, Software software, String status);
-    List<Installation> findAllByComputerAndStatus(Computer computer, String status);
+    List<Installation> findAllByComputerAndSoftware(Computer computer, Software software);
+    List<Installation> findAllByComputer(Computer computer);
 
 }

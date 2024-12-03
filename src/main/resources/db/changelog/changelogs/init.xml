@@ -65,7 +65,7 @@
             <column name="checking_date" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(255)">
+            <column name="install_date" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -82,7 +82,6 @@
         <createIndex tableName="installations" indexName="installations_idx">
             <column name="computer_id"></column>
             <column name="software_id"></column>
-            <column name="status"></column>
         </createIndex>
 
     </changeSet>
@@ -123,9 +122,6 @@
             <column name="checking_date" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
 
         <!-- Добавление внешних ключей -->
@@ -140,7 +136,6 @@
         <createIndex tableName="computer_hardware" indexName="computer_hardware_idx">
             <column name="computer_id"></column>
             <column name="hardware_id"></column>
-            <column name="status"></column>
         </createIndex>
 
     </changeSet>

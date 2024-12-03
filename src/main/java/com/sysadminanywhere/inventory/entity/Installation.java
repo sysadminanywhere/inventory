@@ -30,6 +30,6 @@ public class Installation {
     private LocalDateTime checkingDate;
 
     @Column(nullable = false)
-    private String status;
+    private LocalDateTime installDate;
 
 }

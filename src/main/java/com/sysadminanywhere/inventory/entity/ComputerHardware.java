@@ -29,7 +29,4 @@ public class ComputerHardware {
     @Column(nullable = false)
     private LocalDateTime checkingDate;
 
-    @Column(nullable = false)
-    private String status;
-
 }
