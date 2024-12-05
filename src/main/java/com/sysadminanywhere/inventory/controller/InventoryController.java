@@ -16,7 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api/inventory/software")
 public class InventoryController {
 
     private final ComputerRepository computerRepository;
@@ -35,27 +35,17 @@ public class InventoryController {
         this.softwareMapper = softwareMapper;
     }
 
-//    @GetMapping("/computers")
-//    public ResponseEntity<Page<ComputerDto>> getComputers() {
-//        return ResponseEntity.ok(computerMapper.toDtoList(computerRepository.findAll()));
-//    }
-
     @GetMapping("/computers/{computerId}")
     public ResponseEntity<Page<SoftwareOnComputer>> getSoftwareOnComputer(@PathVariable Long computerId, Pageable pageable) {
         return ResponseEntity.ok(softwareRepository.getSoftwareOnComputer(computerId, pageable));
     }
 
-//    @GetMapping("/software")
-//    public ResponseEntity<Page<SoftwareDto>> getSoftware() {
-//        return ResponseEntity.ok(softwareMapper.toDtoList(softwareRepository.findAll()));
-//    }
-
-    @GetMapping("/software/count")
+    @GetMapping("/count")
     public ResponseEntity<Page<SoftwareCount>> getSoftwareCount(Pageable pageable) {
         return ResponseEntity.ok(softwareRepository.getSoftwareInstallationCount(pageable));
     }
 
-    @GetMapping("/software/{softwareId}")
+    @GetMapping("/{softwareId}")
     public ResponseEntity<Page<ComputerDto>> getComputersWithSoftware(@PathVariable Long softwareId, Pageable pageable) {
         return ResponseEntity.ok(computerRepository.getComputersWithSoftware(softwareId, pageable));
     }
