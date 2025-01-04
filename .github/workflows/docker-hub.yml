@@ -19,5 +19,6 @@ jobs:
 
       - name: Docker Build and Push to DockerHub
         run: |
+          mvn clean package -DskipTests -Pproduction
           docker build -t sysadminanywhere/inventory:latest .
           docker push sysadminanywhere/inventory:latest
